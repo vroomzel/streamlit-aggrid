@@ -234,7 +234,7 @@ class AgGrid extends StreamlitComponentBase<State> {
   private currencyFormatter(number: any, currencySymbol: string): String {
     let n = Number.parseFloat(number)
     if (!Number.isNaN(n)) {
-      return currencySymbol + n.toFixed(2)
+      return currencySymbol + n.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
     } else {
       return number
     }
