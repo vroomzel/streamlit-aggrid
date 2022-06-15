@@ -1,22 +1,17 @@
-import {
-  Streamlit,
-  StreamlitComponentBase,
-  withStreamlitConnection
-} from "streamlit-component-lib";
+import {Streamlit, StreamlitComponentBase, withStreamlitConnection} from "streamlit-component-lib";
 
-import { ReactNode } from "react"
+import {ReactNode} from "react"
 
-import { AgGridReact } from '@ag-grid-community/react';
-import { ColumnApi, GridApi } from '@ag-grid-community/core'
-import { ModuleRegistry } from '@ag-grid-community/core';
-import { AllCommunityModules } from '@ag-grid-community/all-modules'
-import { AllModules } from '@ag-grid-enterprise/all-modules'
-import { LicenseManager } from "@ag-grid-enterprise/core";
+import {AgGridReact} from '@ag-grid-community/react';
+import {ColumnApi, GridApi, ModuleRegistry} from '@ag-grid-community/core'
+import {AllCommunityModules} from '@ag-grid-community/all-modules'
+import {AllModules} from '@ag-grid-enterprise/all-modules'
+import {LicenseManager} from "@ag-grid-enterprise/core";
 
-import { parseISO, compareAsc } from 'date-fns'
-import { format } from 'date-fns-tz'
+import {compareAsc, parseISO} from 'date-fns'
+import {format} from 'date-fns-tz'
 import deepMap from "./utils"
-import { duration } from "moment";
+import {duration} from "moment";
 
 import '@ag-grid-community/core/dist/styles/ag-theme-blue.css';
 import '@ag-grid-community/core/dist/styles/ag-theme-fresh.css';
@@ -109,6 +104,9 @@ class AgGrid extends StreamlitComponentBase<State> {
         },
         'customNumericFormat': {
           valueFormatter: (params: any) => this.numberFormatter(params.value, params.column.colDef.precision ?? 2),
+        },
+        'customVolatilityFormat': {
+          valueFormatter: (params: any) => this.volatilityFormatter(params.value, params.column.colDef.precision ?? 1),
         },
         'customCurrencyFormat': {
           valueFormatter: (params: any) => this.currencyFormatter(params.value, params.column.colDef.custom_currency_symbol),
@@ -244,6 +242,15 @@ class AgGrid extends StreamlitComponentBase<State> {
     let n = Number.parseFloat(number)
     if (!Number.isNaN(n)) {
       return n.toFixed(precision)
+    } else {
+      return number
+    }
+  }
+
+  private volatilityFormatter(number: any, precision: number): String {
+    let n = Number.parseFloat(number)
+    if (!Number.isNaN(n)) {
+      return (n * 100).toFixed(precision) + '%'
     } else {
       return number
     }
