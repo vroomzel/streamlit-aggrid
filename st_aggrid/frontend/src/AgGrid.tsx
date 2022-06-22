@@ -54,10 +54,10 @@ function addCustomCSS(custom_css: CSSDict): void {
   document.head.appendChild(styleSheet)
 }
 
-function hex(c: string) {
+function hex(c: any) {
   var s = '0123456789abcdef';
   var i = parseInt(c);
-  if (i === 0 || isNaN(i)) return '00';
+  if (isNaN(c) || i === 0) return '00';
   i = Math.round(Math.min(Math.max(0, i), 255));
   return s.charAt((i - (i % 16)) / 16) + s.charAt(i % 16);
 }
