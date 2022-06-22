@@ -46,13 +46,77 @@ function getCSS(styles: CSSDict): string {
 }
 
 function addCustomCSS(custom_css: CSSDict): void {
-    var css = getCSS(custom_css)
-    var styleSheet = document.createElement("style")
-    styleSheet.type = "text/css"
-    styleSheet.innerText = css
-    console.log(`Adding cutom css: `, css)
-    document.head.appendChild(styleSheet)
+  var css = getCSS(custom_css)
+  var styleSheet = document.createElement("style")
+  styleSheet.type = "text/css"
+  styleSheet.innerText = css
+  console.log(`Adding cutom css: `, css)
+  document.head.appendChild(styleSheet)
 }
+
+function hex(c: string) {
+  var s = '0123456789abcdef';
+  var i = parseInt(c);
+  if (i === 0 || isNaN(i)) return '00';
+  i = Math.round(Math.min(Math.max(0, i), 255));
+  return s.charAt((i - (i % 16)) / 16) + s.charAt(i % 16);
+}
+
+/* Convert an RGB triplet to a hex string */
+function convertToHex(rgb: any) {
+  return hex(rgb[0]) + hex(rgb[1]) + hex(rgb[2]);
+}
+
+/* Remove '#' in color hex string */
+function trim(s: string) {
+  return s.charAt(0) === '#' ? s.substring(1, 7) : s;
+}
+
+/* Convert a hex string to an RGB triplet */
+function convertToRGB(hex: string) {
+  var color = [];
+  color[0] = parseInt(trim(hex).substring(0, 2), 16);
+  color[1] = parseInt(trim(hex).substring(2, 4), 16);
+  color[2] = parseInt(trim(hex).substring(4, 6), 16);
+  return color;
+}
+
+function generateColor(colorStart: string, colorEnd: string, colorCount: number, index: number) {
+  // The beginning of your gradient
+  var start = convertToRGB(colorStart);
+
+  // The end of your gradient
+  var end = convertToRGB(colorEnd);
+
+  // The number of colors to compute
+  var len = colorCount;
+
+  //Alpha blending amount
+  var alpha = 0.0;
+
+  var saida = [];
+
+  let i;
+  for (i = 0; i < len; i++) {
+    var c = [];
+    alpha += 1.0 / len;
+
+    c[0] = start[0] * alpha + (1 - alpha) * end[0];
+    c[1] = start[1] * alpha + (1 - alpha) * end[1];
+    c[2] = start[2] * alpha + (1 - alpha) * end[2];
+
+    saida.push(convertToHex(c));
+  }
+
+  return saida[index];
+}
+
+function onlyUnique(value: any, index: any, self: any) {
+  if (value !== 'nan') {
+    return self.indexOf(value) === index;
+  }
+}
+
 
 class AgGrid extends StreamlitComponentBase<State> {
   private frameDtypes: any
@@ -63,6 +127,10 @@ class AgGrid extends StreamlitComponentBase<State> {
   private allowUnsafeJsCode: boolean = false
   private fitColumnsOnGridLoad: boolean = false
   private gridOptions: any
+  private gradientLowValueColour = '#FF0000'
+  private gradientHighValueColour = '#00FF00'
+  private allValuesInTable: number[] = []
+  private valuesForTableOrdered: number[] = []
 
   constructor(props: any) {
     super(props)
@@ -84,7 +152,15 @@ class AgGrid extends StreamlitComponentBase<State> {
     this.manualUpdateRequested = (this.props.args.update_mode === 1)
     this.allowUnsafeJsCode = this.props.args.allow_unsafe_jscode
     this.fitColumnsOnGridLoad = this.props.args.fit_columns_on_grid_load
-    
+
+    this.state = {
+      rowData: JSON.parse(props.args.row_data),
+      gridHeight: this.props.args.height,
+      should_update: false
+    }
+
+    this.initialiseValuesRequiredForConditionalFormatting(this.props.args.gridOptions, this.state.rowData)
+
     this.columnFormaters = {
       columnTypes: {
         'dateColumnFilter': {
@@ -114,6 +190,9 @@ class AgGrid extends StreamlitComponentBase<State> {
         'timedeltaFormat': {
           valueFormatter: (params: any) => duration(params.value).humanize(true)
         },
+        'conditionalFormat': {
+          cellStyle: (params: any) => this.conditionalFormattingCellStyle(params.value, this.valuesForTableOrdered)
+        },
       }
     }
 
@@ -124,12 +203,49 @@ class AgGrid extends StreamlitComponentBase<State> {
       gridOptions = this.convertJavascriptCodeOnGridOptions(gridOptions)
     }
     this.gridOptions = gridOptions
+  }
 
-    this.state = {
-      rowData: JSON.parse(props.args.row_data),
-      gridHeight: this.props.args.height,
-      should_update: false
-    }
+
+  private initialiseValuesRequiredForConditionalFormatting(gridOptions: any, rowData: any) {
+    const columnDefs = gridOptions.columnDefs;
+    // console.log(columnDefs)
+    const columnDefFieldForConditionalFormatting = columnDefs
+        // .filter((x:any) => x.cellStyle?.name === 'conditionalFormattingCellStyle')
+        // .filter((x:any) =>  x.conditional_formatting_group === 'group1')
+        .filter((x: any) => x.type.includes('conditionalFormat'))
+        .map((x: any) => {
+          if (x.field) {
+            return x.field;
+          }
+        });
+    // console.log(columnDefFieldForConditionalFormatting)
+    rowData.forEach((x: any) => {
+      columnDefFieldForConditionalFormatting.forEach((field: any) => {
+        this.allValuesInTable.push(x[field]);
+      })
+    });
+    // console.log(this.allValuesInTable)
+    // const uniquValues = [...new Set(this.allValuesInTable)];
+    const uniquValues = this.allValuesInTable.filter(onlyUnique)//.filter((x:any)=>x!=='nan');
+
+    this.valuesForTableOrdered = uniquValues.sort(function (a, b) {
+      return a - b;
+    });
+    // console.log(this.valuesForTableOrdered)
+  }
+
+  private conditionalFormattingCellStyle(number: any, valuesForTableOrdered: any) {
+    // the index, or how far along the value is in the gradient
+    const valueIndex = valuesForTableOrdered.indexOf(number);
+    // get the colour for the cell, depending on its index
+    const bgColour = generateColor(
+        this.gradientHighValueColour,
+        this.gradientLowValueColour,
+        this.valuesForTableOrdered.length,
+        valueIndex
+    );
+
+    return {backgroundColor: '#' + bgColour};
   }
 
   static getDerivedStateFromProps(props: any, state: any) {
@@ -208,6 +324,8 @@ class AgGrid extends StreamlitComponentBase<State> {
     for (var idx in this.gridOptions['preSelectedRows']) {
       this.api.selectIndex(this.gridOptions['preSelectedRows'][idx], true, true)
     }
+
+
   }
 
   private fitColumns() {
