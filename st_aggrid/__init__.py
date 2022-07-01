@@ -1,15 +1,17 @@
 import os
-import streamlit.components.v1 as components
-import pandas as pd
-import numpy as np
-import simplejson
-import warnings
-from dotenv import load_dotenv
 import typing
+import warnings
+from numbers import Number
+
+import numpy as np
+import pandas as pd
+import simplejson
+import streamlit.components.v1 as components
+from dotenv import load_dotenv
 
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode, DataReturnMode, JsCode, walk_gridOptions
-from numbers import Number
+
 load_dotenv()
 
 _RELEASE = os.getenv("AGGRID_RELEASE",'true').lower() == 'true'
@@ -250,7 +252,7 @@ def AgGrid(
 
                 text_columns = [k for k,v in original_types.items() if v in ['O','S','U']]
                 if text_columns:
-                    frame.loc[:,text_columns.keys()]  = frame.loc[:,text_columns.keys()].astype(str)
+                    frame.loc[:, text_columns] = frame.loc[:, text_columns].astype(str)
 
                 date_columns = [k for k,v in original_types.items() if v == "M"]
                 if date_columns:
