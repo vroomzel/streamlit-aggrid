@@ -165,7 +165,7 @@ class GridOptionsBuilder:
             "toolPanel": "agFiltersToolPanel",
         }
 
-        columns_panel = {
+        column_panel = {
             "id": "columns",
             "labelDefault": "Columns",
             "labelKey": "columns",
@@ -179,7 +179,7 @@ class GridOptionsBuilder:
             if filters_panel:
                 sideBar["toolPanels"].append(filter_panel)
             if columns_panel:
-                sideBar["toolPanels"].append(columns_panel)
+                sideBar["toolPanels"].append(column_panel)
 
             self.__grid_options["sideBar"] = sideBar
 
@@ -246,7 +246,7 @@ class GridOptionsBuilder:
         self.__grid_options["suppressRowDeselection"] = suppressRowDeselection
         self.__grid_options["suppressRowClickSelection"] = suppressRowClickSelection
         self.__grid_options["groupSelectsChildren"] = groupSelectsChildren and selection_mode == "multiple"
-        self.__grid_options["groupSelectsFiltered"] = groupSelectsChildren
+        self.__grid_options["groupSelectsFiltered"] = groupSelectsFiltered
     
     def configure_pagination(self, enabled=True, paginationAutoPageSize=True, paginationPageSize=10):
         """Configure grid's pagination features
