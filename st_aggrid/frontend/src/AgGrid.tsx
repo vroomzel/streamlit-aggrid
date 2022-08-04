@@ -175,6 +175,9 @@ class AgGrid extends StreamlitComponentBase<State> {
         'shortDateTimeFormat': {
           valueFormatter: (params: any) => this.dateFormatter(params.value, "dd/MM/yyyy HH:mm"),
         },
+        'customDateFormat': {
+          valueFormatter: (params: any) => this.dateFormatter(params.value, "yyyy-MM-dd"),
+        },
         'customDateTimeFormat': {
           valueFormatter: (params: any) => this.dateFormatter(params.value, params.column.colDef.custom_format_string),
         },
@@ -185,7 +188,7 @@ class AgGrid extends StreamlitComponentBase<State> {
           valueFormatter: (params: any) => this.volatilityFormatter(params.value, params.column.colDef.precision ?? 1),
         },
         'customCurrencyFormat': {
-          valueFormatter: (params: any) => this.currencyFormatter(params.value, params.column.colDef.custom_currency_symbol),
+          valueFormatter: (params: any) => this.currencyFormatter(params.value, params.column.colDef.custom_currency_symbol, params.column.colDef.precision ?? 0),
         },
         'timedeltaFormat': {
           valueFormatter: (params: any) => duration(params.value).humanize(true)
@@ -347,10 +350,10 @@ class AgGrid extends StreamlitComponentBase<State> {
     finally { }
   }
 
-  private currencyFormatter(number: any, currencySymbol: string): String {
+  private currencyFormatter(number: any, currencySymbol: string, precision: number = 0): String {
     let n = Number.parseFloat(number)
     if (!Number.isNaN(n)) {
-      return currencySymbol + n.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+      return currencySymbol + n.toFixed(precision).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
     } else {
       return number
     }
