@@ -1,12 +1,13 @@
 from collections import defaultdict
+import pandas as pd
 
 
 class GridOptionsBuilder:
     """Builder for gridOptions dictionary"""
 
     def __init__(self):
-        self.__grid_options = defaultdict(dict)
-        self.sideBar = {}
+        self.__grid_options : defaultdict = defaultdict(dict)
+        self.sideBar : dict = dict()
 
     @staticmethod
     def from_dataframe(dataframe, **default_column_parameters):
@@ -98,6 +99,12 @@ class GridOptionsBuilder:
         self.__grid_options["defaultColDef"] = defaultColDef
 
     def configure_auto_height(self, autoHeight=True):
+        """
+        Makes grid autoheight
+
+        Args:
+            autoHeight (bool, optional): enable or disable autoheight. Defaults to True.
+        """        
         if autoHeight:
             self.configure_grid_options(domLayout='autoHeight')
         else:
@@ -135,7 +142,7 @@ class GridOptionsBuilder:
         if not self.__grid_options.get("columnDefs", None):
             self.__grid_options["columnDefs"] = defaultdict(dict)
 
-        colDef = {"headerName": header_name if header_name else field, "field": field}
+        colDef = {"headerName": field if header_name is None else header_name, "field": field}
 
         if other_column_properties:
             colDef = {**colDef, **other_column_properties}
@@ -187,6 +194,8 @@ class GridOptionsBuilder:
         self,
         selection_mode="single",
         use_checkbox=False,
+        header_checkbox=False,
+        header_checkbox_filtered_only=True,
         pre_selected_rows=None,
         rowMultiSelectWithClick=False,
         suppressRowDeselection=False,
@@ -199,6 +208,17 @@ class GridOptionsBuilder:
         Args:
             selection_mode (str, optional):
                 Either 'single', 'multiple' or 'disabled'. Defaults to 'single'.
+                
+            use_checkbox (bool, optional):
+                Set to true to have checkbox next to each row.
+                
+            header_checkbox (bool, optional):
+                Set to true to have a checkbox in the header to select all rows.
+                
+            header_checkbox_filtered_only (bool, optional):
+                If header_checkbox is set to True, once the header checkbox is clicked, returned rows depend on this parameter.
+                If this is set to True, only filtered (shown) rows will be selected and returned.
+                If this is set to False, the whole dataframe (all rows regardless of the applited filter) will be selected and returned.
 
             pre_selected_rows (list, optional):
                 Use list of dataframe row iloc index to set corresponding rows as selected state on load. Defaults to None.
@@ -237,6 +257,10 @@ class GridOptionsBuilder:
             suppressRowClickSelection = True
             first_key = next(iter(self.__grid_options["columnDefs"].keys()))
             self.__grid_options["columnDefs"][first_key]["checkboxSelection"] = True
+            if header_checkbox:
+                self.__grid_options["columnDefs"][first_key]["headerCheckboxSelection"] = True
+                if header_checkbox_filtered_only:
+                    self.__grid_options["columnDefs"][first_key]["headerCheckboxSelectionFilteredOnly"] = True
         
         if pre_selected_rows:
             self.__grid_options['preSelectedRows'] = pre_selected_rows
@@ -272,6 +296,32 @@ class GridOptionsBuilder:
             self.__grid_options["paginationAutoPageSize"] = paginationAutoPageSize
         else:
             self.__grid_options["paginationPageSize"] = paginationPageSize
+
+    def configure_first_column_as_index(self, suppressMenu : bool =True, headerText: str = "", resizable= False, sortable=True): 
+        """
+        Configures the first column definition to look as an index column.
+
+        Args:
+            suppressMenu (bool, optional): Suppresses the header menu for the index col. Defaults to True.
+            headerText (str, optional): Header for the index column. Defaults to empty string.
+            resizable (bool, optional): Make index column resizable. Defaults to False.
+            sortable (bool, optional): Make index column sortable. Defaults to True.
+
+        """        
+                
+        index_options =   {
+            "minWidth" : 0,
+            "cellStyle": {"color": "white", "background-color": "gray"},
+            "pinned": "left",
+            "resizable": resizable,
+            "sortable": sortable,
+            "suppressMovable": True,
+            "suppressMenu" : suppressMenu,
+            "menuTabs" : ['filterMenuTab'],
+        }
+        first_col_def = next(iter(self.__grid_options["columnDefs"]))
+
+        self.configure_column(first_col_def, headerText, **index_options)
 
     def build(self):
         """Builds the gridOptions dictionary
