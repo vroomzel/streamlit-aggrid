@@ -1,4 +1,4 @@
-from enum import IntEnum, IntFlag, Flag, auto
+from enum import IntEnum, Flag, auto
 class GridUpdateMode(Flag):
     NO_UPDATE = auto()
     MANUAL = auto()
