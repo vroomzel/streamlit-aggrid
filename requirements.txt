@@ -1,3 +1,2 @@
-streamlit-aggrid==0.2.3-2
-simplejson
-pandas
+streamlit
+python-decouple

@@ -2,13 +2,15 @@
 
 [![Open in Streamlit][share_badge]][share_link] [![GitHub][github_badge]][github_link] [![PyPI][pypi_badge]][pypi_link] 
 
-AgGrid is an awsome grid for web frontend. More information in [https://www.ag-grid.com/](https://www.ag-grid.com/). Consider purchasing a license from Ag-Grid if you are going to use enterprise features!
+AgGrid is an awesome grid for web frontend. More information in [https://www.ag-grid.com/](https://www.ag-grid.com/). Consider purchasing a license from Ag-Grid if you are going to use enterprise features!
 
 Comment on [discuss.streamlit.io](https://discuss.streamlit.io/t/ag-grid-component-with-input-support/) If you like it or [Buy me a beer 🍺!](https://www.paypal.com/donate?hosted_button_id=8HGLA4JZBYFPQ)
 
 <br>
-
+Live example [https://pablocfonseca-streamlit-aggrid-examples-example-jyosi3.streamlitapp.com/](On streamlit cloud.)
 Some basic documentation is available: https://streamlit-aggrid.readthedocs.io
+
+
 # Install
 ```
 pip install streamlit-aggrid
@@ -35,6 +37,19 @@ Grid data is sent back to streamlit and can be reused in other components. In th
 ![example image](https://github.com/PablocFonseca/streamlit-aggrid/raw/main/group_selection_example.gif)
 
 # Development Notes
+Version 0.3.0  
+* Merged some PR (Thanks everybody!) check PR at github!
+* Added class parsing in React Side, so more advanced CellRenderers can be used. (Thanks [kjakaitis](https://github.com/kjakaitis))
+* Added gridOptionsBuilder.configure_first_column_as_index() to, well, style the first columns as an index (MultiIndex to come!)
+* Improved serialization performance by using simpler pandas to_json method (PR #62, #85)
+* Added option to render plain json instead of pd.dataframes
+* gridOptions may be loaded from file paths or strings
+* gridReturn is now a @dataclass with rowIndex added to selected_rows, (previous version returned only the selected data, now you can know which row was selected)
+* Changed GridReturnMode behaviour. Now update_on accepts a list of gridEvents that will trigger a streamlit refresh, making it possible to subscribe to any [gridEvent](https://www.ag-grid.com/javascript-data-grid/grid-events/).
+* Removed dot-env and simplejson dependencies.
+* Other smaller fixes and typos corrections.
+
+
 Version 0.2.3
 * small fixes
 * Merged PR #44 and #25 (thanks [msabramo](https://github.com/msabramo) and [ljnsn](https://github.com/ljnsn))
@@ -75,7 +90,7 @@ Version 0.1.5
 Version 0.1.3
 * Fixed bug where cell was blank after edition.
 * Added enable_enterprise_modules argument to AgGrid call for enabling/disabling [enterprise features](https://www.ag-grid.com/documentation/javascript/licensing/)
-* It is now possible to inject js functions on gridOptions. Enabling advanced customizations such as conditional formating (check 4<sup>th</sup> column on the [example](share_link))
+* It is now possible to inject js functions on gridOptions. Enabling advanced customizations such as conditional formatting (check 4<sup>th</sup> column on the [example](share_link))
 
 Version 0.1.2
 * added customCurrencyFormat as column type
