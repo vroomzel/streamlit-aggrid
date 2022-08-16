@@ -1,41 +1,38 @@
-import {
-  Streamlit,
-  StreamlitComponentBase,
-  withStreamlitConnection,
-} from "streamlit-component-lib"
+import {Streamlit, StreamlitComponentBase, withStreamlitConnection,} from "streamlit-component-lib"
 
-import { ReactNode } from "react"
+import {ReactNode} from "react"
 
-import { AgGridReact } from "@ag-grid-community/react"
+import {AgGridReact} from "@ag-grid-community/react"
 
-import { ModuleRegistry, ColumnApi, GridApi, DetailGridInfo } from "@ag-grid-community/core"
+import {ColumnApi, DetailGridInfo, GetRowIdParams, GridApi, ModuleRegistry} from "@ag-grid-community/core"
 
-import { ClientSideRowModelModule } from "@ag-grid-community/client-side-row-model"
-import { LicenseManager } from "@ag-grid-enterprise/core"
-import { GridChartsModule } from "@ag-grid-enterprise/charts"
-import { SparklinesModule } from "@ag-grid-enterprise/sparklines"
-import { ColumnsToolPanelModule } from "@ag-grid-enterprise/column-tool-panel"
-import { ExcelExportModule } from "@ag-grid-enterprise/excel-export"
-import { FiltersToolPanelModule } from "@ag-grid-enterprise/filter-tool-panel"
-import { MasterDetailModule } from "@ag-grid-enterprise/master-detail"
-import { MenuModule } from "@ag-grid-enterprise/menu"
-import { RangeSelectionModule } from "@ag-grid-enterprise/range-selection"
-import { RichSelectModule } from "@ag-grid-enterprise/rich-select"
-import { RowGroupingModule } from "@ag-grid-enterprise/row-grouping"
-import { SetFilterModule } from "@ag-grid-enterprise/set-filter"
-import { MultiFilterModule } from "@ag-grid-enterprise/multi-filter"
-import { SideBarModule } from "@ag-grid-enterprise/side-bar"
-import { StatusBarModule } from "@ag-grid-enterprise/status-bar"
+import {ClientSideRowModelModule} from "@ag-grid-community/client-side-row-model"
+import {LicenseManager} from "@ag-grid-enterprise/core"
+import {GridChartsModule} from "@ag-grid-enterprise/charts"
+import {SparklinesModule} from "@ag-grid-enterprise/sparklines"
+import {ColumnsToolPanelModule} from "@ag-grid-enterprise/column-tool-panel"
+import {ExcelExportModule} from "@ag-grid-enterprise/excel-export"
+import {FiltersToolPanelModule} from "@ag-grid-enterprise/filter-tool-panel"
+import {MasterDetailModule} from "@ag-grid-enterprise/master-detail"
+import {MenuModule} from "@ag-grid-enterprise/menu"
+import {RangeSelectionModule} from "@ag-grid-enterprise/range-selection"
+import {RichSelectModule} from "@ag-grid-enterprise/rich-select"
+import {RowGroupingModule} from "@ag-grid-enterprise/row-grouping"
+import {SetFilterModule} from "@ag-grid-enterprise/set-filter"
+import {MultiFilterModule} from "@ag-grid-enterprise/multi-filter"
+import {SideBarModule} from "@ag-grid-enterprise/side-bar"
+import {StatusBarModule} from "@ag-grid-enterprise/status-bar"
 
-import { parseISO, compareAsc } from "date-fns"
-import { format } from "date-fns-tz"
+import {compareAsc, parseISO} from "date-fns"
+import {format} from "date-fns-tz"
 import deepMap from "./utils"
-import { duration } from "moment"
+import {duration} from "moment"
 
-import { debounce } from "lodash"
+import {debounce} from "lodash"
 
 import "./AgGrid.scss"
 import "./scrollbar.css"
+
 interface State {
   rowData: any
   gridHeight: number
@@ -147,6 +144,8 @@ class AgGrid extends StreamlitComponentBase<State> {
   private gradientHighValueColour = '#00FF00'
   private allValuesInTable: number[] = []
   private valuesForTableOrdered: number[] = []
+  private wsUrl: string
+  private rowIdCol: string
 
   constructor(props: any) {
     super(props)
@@ -182,6 +181,8 @@ class AgGrid extends StreamlitComponentBase<State> {
     this.manualUpdateRequested = this.props.args.manual_update === 1
     this.allowUnsafeJsCode = this.props.args.allow_unsafe_jscode
     this.fitColumnsOnGridLoad = this.props.args.fit_columns_on_grid_load
+    this.wsUrl = this.props.args.websocket_connection_string
+    this.rowIdCol = this.props.args.row_id_col
 
     this.state = {
       rowData: JSON.parse(props.args.row_data),
@@ -232,7 +233,7 @@ class AgGrid extends StreamlitComponentBase<State> {
           valueFormatter: (params: any) =>
               this.currencyFormatter(
                   params.value,
-                  params.column.colDef.custom_currency_symbol,
+                  params.column.colDef.custom_currency_symbol ?? '$',
                   params.column.colDef.precision ?? 0
               ),
         },
@@ -247,14 +248,24 @@ class AgGrid extends StreamlitComponentBase<State> {
     }
 
     let gridOptions = Object.assign(
-      {},
-      this.columnFormaters,
-      this.props.args.gridOptions
+        {},
+        this.columnFormaters,
+        this.props.args.gridOptions
     )
 
     if (this.allowUnsafeJsCode) {
       console.warn("flag allow_unsafe_jscode is on.")
       gridOptions = this.convertJavascriptCodeOnGridOptions(gridOptions)
+    }
+    if (this.rowIdCol !== undefined) {
+      gridOptions.getRowId = (params: GetRowIdParams) => {
+        // console.log(this.rowIdCol)
+        // console.log(params.data)
+        // console.log(params.data[this.rowIdCol])
+        // console.log(params.data.ExpirationDate)
+        return params.data[this.rowIdCol];
+      }
+
     }
     this.gridOptions = gridOptions
   }
@@ -381,7 +392,7 @@ class AgGrid extends StreamlitComponentBase<State> {
     })
 
     this.api.addEventListener("firstDataRendered", (e: any) =>
-      this.fitColumns()
+        this.fitColumns()
     )
 
     this.api.setRowData(this.state.rowData)
@@ -389,8 +400,20 @@ class AgGrid extends StreamlitComponentBase<State> {
     for (var idx in this.gridOptions["preSelectedRows"]) {
       this.api.selectIndex(this.gridOptions["preSelectedRows"][idx], true, true)
     }
+    // console.log(this.state.rowData)
+    this.wsUpdate(this.api)
 
+  }
 
+  private wsUpdate(api: any) {
+    if (this.wsUrl !== undefined) {
+      let ws = new WebSocket(this.wsUrl);
+      ws.onmessage = function (event) {
+        let data = JSON.parse(event.data)
+        // console.log(data)
+        api.applyTransactionAsync({update: data})
+      }
+    }
   }
 
   private fitColumns() {

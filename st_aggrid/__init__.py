@@ -1,25 +1,28 @@
-import os
-import streamlit.components.v1 as components
-import pandas as pd
 import json
-import warnings
+import os
 import typing
-
+import warnings
 from dataclasses import dataclass, field
-from decouple import config
 from typing import List, Mapping, Union
+
+import pandas as pd
+import streamlit.components.v1 as components
+from decouple import config
+
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 from st_aggrid.shared import GridUpdateMode, DataReturnMode, JsCode, walk_gridOptions
 
-__AVAILABLE_THEMES = ['streamlit','light','dark', 'blue', 'fresh','material']
+__AVAILABLE_THEMES = ['streamlit', 'light', 'dark', 'blue', 'fresh', 'material']
+
+
 @dataclass
 class AgGridReturn(Mapping):
     """Class to hold AgGrid call return"""
-    data: Union[pd.DataFrame , str] = None
+    data: Union[pd.DataFrame, str] = None
     selected_rows: List[Mapping] = field(default_factory=list)
     column_state = None
 
-    #Backwards compatibility with dict interface
+    # Backwards compatibility with dict interface
     def __getitem__(self, __k):
         return self.__dict__.__getitem__(__k)
 
@@ -139,27 +142,30 @@ def __parse_update_mode(update_mode: GridUpdateMode):
         
     return update_on
 
+
 def AgGrid(
-    data: Union[pd.DataFrame,  str],
-    gridOptions: typing.Dict=None ,
-    height: int =400,
-    width=None,
-    fit_columns_on_grid_load: bool=False,
-    update_mode: GridUpdateMode= 'model_changed' ,
-    data_return_mode: DataReturnMode= 'as_input' ,
-    allow_unsafe_jscode: bool=False,
-    enable_enterprise_modules: bool=False,
-    license_key: str=None,
-    try_to_convert_back_to_original_types: bool=True,
-    conversion_errors: str='coerce',
-    reload_data:bool=False,
-    columns_state = None,
-    theme:str='light',
-    custom_css=None,
-    use_legacy_selected_rows=False,
-    key: typing.Any=None,
-    update_on = [],
-    **default_column_parameters) -> typing.Dict:
+        data: Union[pd.DataFrame, str],
+        gridOptions: typing.Dict = None,
+        height: int = 400,
+        width=None,
+        fit_columns_on_grid_load: bool = False,
+        update_mode: GridUpdateMode = 'model_changed',
+        data_return_mode: DataReturnMode = 'as_input',
+        allow_unsafe_jscode: bool = False,
+        enable_enterprise_modules: bool = False,
+        license_key: str = None,
+        try_to_convert_back_to_original_types: bool = True,
+        conversion_errors: str = 'coerce',
+        reload_data: bool = False,
+        columns_state=None,
+        theme: str = 'light',
+        custom_css=None,
+        use_legacy_selected_rows=False,
+        key: typing.Any = None,
+        update_on=[],
+        websocket_connection_string: str = None,
+        row_id_col: str = None,
+        **default_column_parameters) -> typing.Dict:
     """Reders a DataFrame using AgGrid.
 
     Parameters
@@ -314,10 +320,10 @@ def AgGrid(
         component_value = _component_func(
             gridOptions=gridOptions,
             row_data=row_data,
-            height=height, 
+            height=height,
             width=width,
-            fit_columns_on_grid_load=fit_columns_on_grid_load, 
-            data_return_mode=data_return_mode, 
+            fit_columns_on_grid_load=fit_columns_on_grid_load,
+            data_return_mode=data_return_mode,
             frame_dtypes=frame_dtypes,
             allow_unsafe_jscode=allow_unsafe_jscode,
             enable_enterprise_modules=enable_enterprise_modules,
@@ -328,9 +334,12 @@ def AgGrid(
             theme=theme,
             custom_css=custom_css,
             update_on=update_on,
-            manual_update=1 if (update_mode==GridUpdateMode.MANUAL) or (update_on and update_on[0]==GridUpdateMode.MANUAL) else 0,
-            key=key
-            )
+            manual_update=1 if (update_mode == GridUpdateMode.MANUAL) or (
+                    update_on and update_on[0] == GridUpdateMode.MANUAL) else 0,
+            key=key,
+            websocket_connection_string=websocket_connection_string,
+            row_id_col=row_id_col
+        )
 
     except components.components.MarshallComponentException as ex:
         #uses a more complete error message.
