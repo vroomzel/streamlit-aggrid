@@ -257,7 +257,7 @@ class AgGrid extends StreamlitComponentBase<State> {
       console.warn("flag allow_unsafe_jscode is on.")
       gridOptions = this.convertJavascriptCodeOnGridOptions(gridOptions)
     }
-    if (this.rowIdCol !== undefined) {
+    if (this.rowIdCol !== null) {
       gridOptions.getRowId = (params: GetRowIdParams) => {
         // console.log(this.rowIdCol)
         // console.log(params.data)
@@ -400,19 +400,19 @@ class AgGrid extends StreamlitComponentBase<State> {
     for (var idx in this.gridOptions["preSelectedRows"]) {
       this.api.selectIndex(this.gridOptions["preSelectedRows"][idx], true, true)
     }
-    // console.log(this.state.rowData)
-    this.wsUpdate(this.api)
+    if (this.wsUrl !== null) {
+      // console.log(this.state.rowData)
+      this.wsUpdate(this.api)
+    }
 
   }
 
   private wsUpdate(api: any) {
-    if (this.wsUrl !== undefined) {
-      let ws = new WebSocket(this.wsUrl);
-      ws.onmessage = function (event) {
-        let data = JSON.parse(event.data)
-        // console.log(data)
-        api.applyTransactionAsync({update: data})
-      }
+    let ws = new WebSocket(this.wsUrl);
+    ws.onmessage = function (event) {
+      let data = JSON.parse(event.data)
+      // console.log(data)
+      api.applyTransactionAsync({update: data})
     }
   }
 
