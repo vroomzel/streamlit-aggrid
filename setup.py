@@ -1,29 +1,33 @@
-import setuptools
+from setuptools import setup
+
+with open('requirements.txt', "r") as fh:
+    install_requires = fh.read().split()
+
+__version__ = None
+with open('st_aggrid/_version.py', 'r') as fh:
+    exec(fh.readline())
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+setup(
     name="streamlit-aggrid",
-    version="0.2.1",
+    version=__version__,
+    packages=['st_aggrid'],
+    package_data={
+        'st_aggrid': ['frontend/build/*'],
+    },
+    install_requires=install_requires,
     author="Pablo Fonseca",
     author_email="pablo.fonseca+pip@gmail.com",
     description="Streamlit component implementation of ag-grid",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/PablocFonseca/streamlit-aggrid",
-    packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    include_package_data=True,
     python_requires='>=3.6',
-    install_requires=[
-        "streamlit >= 0.75",
-        "simplejson >= 3.0",
-        "pandas",
-        "numpy"
-    ]
 )

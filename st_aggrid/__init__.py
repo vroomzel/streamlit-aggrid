@@ -3,6 +3,7 @@ import os
 import typing
 import warnings
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List, Mapping, Union
 
 import pandas as pd
@@ -109,8 +110,8 @@ if not _RELEASE:
         url="http://localhost:3001",
     )
 else:
-    parent_dir = os.path.dirname(os.path.abspath(__file__))
-    build_dir = os.path.join(parent_dir, "frontend","build")
+    parent_dir = Path(os.path.dirname(__file__))
+    build_dir = parent_dir / "frontend/build"
     _component_func = components.declare_component("agGrid", path=build_dir)
 
 def __parse_update_mode(update_mode: GridUpdateMode):
