@@ -22,6 +22,7 @@ import {SetFilterModule} from "@ag-grid-enterprise/set-filter"
 import {MultiFilterModule} from "@ag-grid-enterprise/multi-filter"
 import {SideBarModule} from "@ag-grid-enterprise/side-bar"
 import {StatusBarModule} from "@ag-grid-enterprise/status-bar"
+import { IStatusPanelComp, IStatusPanelParams } from '@ag-grid-community/core';
 
 import {compareAsc, parseISO} from "date-fns"
 import {format} from "date-fns-tz"
@@ -130,6 +131,43 @@ function onlyUnique(value: any, index: any, self: any) {
   }
 }
 
+
+export class RefreshTimeStatusBarComponent implements IStatusPanelComp {
+  params!: IStatusPanelParams;
+  eGui!: HTMLDivElement;
+  eUpdateTime!: HTMLSpanElement;
+
+  init(params: IStatusPanelParams) {
+    this.params = params;
+
+    this.eGui = document.createElement('div');
+    this.eGui.className = 'ag-status-name-value';
+
+    var label = document.createElement('span');
+    label.innerText = 'Last Refresh Time: ';
+    this.eGui.appendChild(label);
+
+    this.eUpdateTime = document.createElement('span');
+    this.eUpdateTime.className = 'ag-status-name-value-value';
+
+    this.eGui.appendChild(this.eUpdateTime);
+
+  }
+
+  getGui() {
+    return this.eGui;
+  }
+
+  destroy() {
+  }
+
+  updateTime() {
+    var today = new Date();
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toTimeString
+    var time=today.toTimeString().slice(0,8)
+    this.eUpdateTime.innerText = time + '';
+  }
+}
 
 class AgGrid extends StreamlitComponentBase<State> {
   private frameDtypes: any
@@ -266,6 +304,18 @@ class AgGrid extends StreamlitComponentBase<State> {
         return params.data[this.rowIdCol];
       }
 
+    }
+
+    if (this.wsUrl !== null) {
+
+      gridOptions.statusBar = {
+        statusPanels: [
+          {
+            statusPanel: RefreshTimeStatusBarComponent,
+            key: 'refreshTimeCompKey',
+          },
+        ],
+      }
     }
     this.gridOptions = gridOptions
   }
@@ -413,6 +463,8 @@ class AgGrid extends StreamlitComponentBase<State> {
       let data = JSON.parse(event.data)
       // console.log(data)
       api.applyTransactionAsync({update: data})
+      const updateTimeComponent = api!.getStatusPanel('refreshTimeCompKey') as any;
+      updateTimeComponent.updateTime();
     }
   }
 
