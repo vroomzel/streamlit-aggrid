@@ -10,6 +10,8 @@ import {ClientSideRowModelModule} from "@ag-grid-community/client-side-row-model
 import {LicenseManager} from "@ag-grid-enterprise/core"
 import {GridChartsModule} from "@ag-grid-enterprise/charts"
 import {SparklinesModule} from "@ag-grid-enterprise/sparklines"
+import {ClipboardModule} from "@ag-grid-enterprise/clipboard"
+import {CsvExportModule} from "@ag-grid-community/csv-export"
 import {ColumnsToolPanelModule} from "@ag-grid-enterprise/column-tool-panel"
 import {ExcelExportModule} from "@ag-grid-enterprise/excel-export"
 import {FiltersToolPanelModule} from "@ag-grid-enterprise/filter-tool-panel"
@@ -188,6 +190,7 @@ class AgGrid extends StreamlitComponentBase<State> {
   constructor(props: any) {
     super(props)
     ModuleRegistry.register(ClientSideRowModelModule)
+    ModuleRegistry.register(CsvExportModule)
 
     if (props.args.custom_css) {
       addCustomCSS(props.args.custom_css)
@@ -209,6 +212,7 @@ class AgGrid extends StreamlitComponentBase<State> {
         MultiFilterModule,
         SideBarModule,
         StatusBarModule,
+        ClipboardModule,
       ])
       if ("license_key" in props.args) {
         LicenseManager.setLicenseKey(props.args["license_key"])
