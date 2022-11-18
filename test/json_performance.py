@@ -1,21 +1,24 @@
 # %%
-%reload_ext autoreload
-%autoreload 2
-#%%
-from timeit import timeit
-import pandas as pd
-import numpy as np
+# %reload_ext autoreload
+# %autoreload 2
+# %%
 from itertools import cycle
-from st_aggrid import _cast_tz_aware_date_columns_to_iso8601, _get_row_data
+
+import numpy as np
+import pandas as pd
+
+from st_aggrid import __cast_date_columns_to_iso8601, __parse_row_data
+
+
 # %%
 def generate_data(samples):
     deltas = cycle([
-            pd.Timedelta(weeks=-2),
-            pd.Timedelta(days=-1),
-            pd.Timedelta(hours=-1),
-            pd.Timedelta(0),
-            pd.Timedelta(minutes=5),
-            pd.Timedelta(seconds=10),
+        pd.Timedelta(weeks=-2),
+        pd.Timedelta(days=-1),
+        pd.Timedelta(hours=-1),
+        pd.Timedelta(0),
+        pd.Timedelta(minutes=5),
+        pd.Timedelta(seconds=10),
             pd.Timedelta(microseconds=50),
             pd.Timedelta(microseconds=10)
             ])
@@ -34,8 +37,8 @@ df = generate_data(100)
 # %%
 df = pd.concat([df] * 10000)
 # %%timeit
-x = _cast_tz_aware_date_columns_to_iso8601(df)
+x = __cast_date_columns_to_iso8601(df)
 x.to_json(orient='records')
 # %%
-_get_row_data(df)
+__parse_row_data(df)
 # %%
