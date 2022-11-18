@@ -57,8 +57,6 @@ def __parse_row_data(data_parameter):
         return row_data
 
     elif isinstance(data_parameter, str):
-        import os
-        import json
         is_path = data_parameter.endswith('.json') and os.path.exists(data_parameter)
         
         if is_path:

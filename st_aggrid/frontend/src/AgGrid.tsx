@@ -4,7 +4,15 @@ import {ReactNode} from "react"
 
 import {AgGridReact} from "@ag-grid-community/react"
 
-import {ColumnApi, DetailGridInfo, GetRowIdParams, GridApi, ModuleRegistry} from "@ag-grid-community/core"
+import {
+  ColumnApi,
+  DetailGridInfo,
+  GetRowIdParams,
+  GridApi,
+  IStatusPanelComp,
+  IStatusPanelParams,
+  ModuleRegistry
+} from "@ag-grid-community/core"
 
 import {ClientSideRowModelModule} from "@ag-grid-community/client-side-row-model"
 import {LicenseManager} from "@ag-grid-enterprise/core"
@@ -24,7 +32,6 @@ import {SetFilterModule} from "@ag-grid-enterprise/set-filter"
 import {MultiFilterModule} from "@ag-grid-enterprise/multi-filter"
 import {SideBarModule} from "@ag-grid-enterprise/side-bar"
 import {StatusBarModule} from "@ag-grid-enterprise/status-bar"
-import { IStatusPanelComp, IStatusPanelParams } from '@ag-grid-community/core';
 
 import {compareAsc, parseISO} from "date-fns"
 import {format} from "date-fns-tz"
@@ -464,7 +471,7 @@ class AgGrid extends StreamlitComponentBase<State> {
   private wsUpdate(api: any) {
     let ws = new WebSocket(this.wsUrl);
     ws.onmessage = function (event) {
-      let data = JSON.parse(event.data)
+      let data = JSON.parse(event.data.replace(/\bNaN\b/g, "null"))
       // console.log(data)
       api.applyTransactionAsync({update: data})
       const updateTimeComponent = api!.getStatusPanel('refreshTimeCompKey') as any;
