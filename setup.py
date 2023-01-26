@@ -11,7 +11,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="streamlit-aggrid",
+    name="st-aggrid",
     version=__version__,
     packages=['st_aggrid'],
     package_data={
