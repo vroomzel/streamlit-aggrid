@@ -10,14 +10,22 @@ class GridUpdateMode(Flag):
     COLUMN_MOVED = auto()
     COLUMN_PINNED = auto()
     COLUMN_VISIBLE = auto()
-    MODEL_CHANGED = VALUE_CHANGED | SELECTION_CHANGED | FILTERING_CHANGED | SORTING_CHANGED 
-    COLUMN_CHANGED =  COLUMN_RESIZED | COLUMN_MOVED | COLUMN_VISIBLE | COLUMN_PINNED
+    MODEL_CHANGED = VALUE_CHANGED | SELECTION_CHANGED | FILTERING_CHANGED | SORTING_CHANGED
+    COLUMN_CHANGED = COLUMN_RESIZED | COLUMN_MOVED | COLUMN_VISIBLE | COLUMN_PINNED
     GRID_CHANGED = MODEL_CHANGED | COLUMN_CHANGED
+
 
 class DataReturnMode(IntEnum):
     AS_INPUT = 0
     FILTERED = 1
     FILTERED_AND_SORTED = 2
+
+
+class ColumnsAutoSizeMode(IntEnum):
+    NO_AUTOSIZE = 0
+    FIT_ALL_COLUMNS_TO_VIEW = 1
+    FIT_CONTENTS = 2
+
 
 # stole from https://github.com/andfanilo/streamlit-echarts/blob/master/streamlit_echarts/frontend/src/utils.js Thanks andfanilo
 class JsCode:

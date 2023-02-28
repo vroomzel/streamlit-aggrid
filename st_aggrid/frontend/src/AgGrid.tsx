@@ -186,7 +186,6 @@ class AgGrid extends StreamlitComponentBase<State> {
   private manualUpdateRequested: boolean = false
   private clearSelectedRowsButton: boolean = false
   private allowUnsafeJsCode: boolean = false
-  private fitColumnsOnGridLoad: boolean = false
   private gridOptions: any
   private gradientLowValueColour = '#FF0000'
   private gradientHighValueColour = '#00FF00'
@@ -233,7 +232,6 @@ class AgGrid extends StreamlitComponentBase<State> {
     this.manualUpdateRequested = this.props.args.manual_update === 1
     this.clearSelectedRowsButton = this.props.args.clear_selected_rows_button
     this.allowUnsafeJsCode = this.props.args.allow_unsafe_jscode
-    this.fitColumnsOnGridLoad = this.props.args.fit_columns_on_grid_load
     this.wsUrl = this.props.args.websocket_connection_string
     this.rowIdCol = this.props.args.row_id_col
     this.gridContainerRef = React.createRef();
@@ -485,10 +483,21 @@ class AgGrid extends StreamlitComponentBase<State> {
   }
 
   private fitColumns() {
-    if (this.fitColumnsOnGridLoad) {
-      this.api.sizeColumnsToFit()
-    } else {
-      this.columnApi.autoSizeAllColumns()
+    const columns_auto_size_mode = this.props.args.columns_auto_size_mode
+
+    switch (columns_auto_size_mode) {
+      case 1:
+      case "FIT_ALL_COLUMNS_TO_VIEW":
+        this.api.sizeColumnsToFit()
+        break
+
+      case 2:
+      case "FIT_CONTENTS":
+        this.columnApi.autoSizeAllColumns()
+        break
+
+      default:
+        break
     }
   }
 
