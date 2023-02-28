@@ -1,6 +1,6 @@
 import {Streamlit, StreamlitComponentBase, withStreamlitConnection,} from "streamlit-component-lib"
 
-import {ReactNode} from "react"
+import React, {ReactNode} from "react"
 
 import {AgGridReact} from "@ag-grid-community/react"
 
@@ -194,6 +194,8 @@ class AgGrid extends StreamlitComponentBase<State> {
   private valuesForTableOrdered: number[] = []
   private wsUrl: string
   private rowIdCol: string
+  private gridContainerRef: React.RefObject<HTMLDivElement>
+  private isGridAutoHeightOn: boolean
 
   constructor(props: any) {
     super(props)
@@ -234,6 +236,8 @@ class AgGrid extends StreamlitComponentBase<State> {
     this.fitColumnsOnGridLoad = this.props.args.fit_columns_on_grid_load
     this.wsUrl = this.props.args.websocket_connection_string
     this.rowIdCol = this.props.args.row_id_col
+    this.gridContainerRef = React.createRef();
+    this.isGridAutoHeightOn = this.props.args.gridOptions?.domLayout === "autoHeight"
 
     this.state = {
       rowData: JSON.parse(props.args.row_data),
@@ -433,41 +437,40 @@ class AgGrid extends StreamlitComponentBase<State> {
 
     if (columnsState != null) {
       //console.dir(columnsState)
-      this.columnApi.applyColumnState({ state: columnsState, applyOrder: true})
+      this.columnApi.applyColumnState({state: columnsState, applyOrder: true})
     }
   }
 
-  private onGridReady(event: any) {
-    this.api = event.api
-    this.columnApi = event.columnApi
-
-    this.api.forEachDetailGridInfo((i: any) => {
-      console.log(i)
-    })
-
-    this.attachUpdateEvents(this.api)
-
-    this.api.forEachDetailGridInfo((i: DetailGridInfo) => {
-      //console.log(i)
-      if (i.api !== undefined) {
-      this.attachUpdateEvents(i.api)
+  public render = (): ReactNode => {
+    if (this.api !== undefined) {
+      if (this.state.should_update) {
+        this.api.setRowData(this.state.rowData)
       }
-    })
+    }
+    this.loadColumnsState()
 
-    this.api.addEventListener("firstDataRendered", (e: any) =>
-        this.fitColumns()
+
+    return (
+        <div
+            id="gridContainer"
+            className={"ag-theme-" + this.props.args.theme}
+            ref={this.gridContainerRef}
+            style={this.defineContainerHeight()}
+        >
+          <this.ManualUpdateButton
+              manual_update={this.manualUpdateRequested}
+              onClick={(e: any) => this.returnGridValue(e)}
+          />
+          <AgGridReact
+              onGridReady={(e) => this.onGridReady(e)}
+              gridOptions={this.gridOptions}
+          ></AgGridReact>
+          <this.ClearRowSelectionButton
+              clear_row_selection={this.clearSelectedRowsButton}
+              onClick={(e: any) => this.api.deselectAll()}
+          />
+        </div>
     )
-
-    this.api.setRowData(this.state.rowData)
-
-    for (var idx in this.gridOptions["preSelectedRows"]) {
-      this.api.selectIndex(this.gridOptions["preSelectedRows"][idx], true, true)
-    }
-    if (this.wsUrl !== null) {
-      // console.log(this.state.rowData)
-      this.wsUpdate(this.api)
-    }
-
   }
 
   private wsUpdate(api: any) {
@@ -584,47 +587,53 @@ class AgGrid extends StreamlitComponentBase<State> {
     }
   }
 
-  public render = (): ReactNode => {
-    if (this.api !== undefined) {
-      if (this.state.should_update) {
-        this.api.setRowData(this.state.rowData)
+  private onGridReady(event: any) {
+    this.api = event.api
+    this.columnApi = event.columnApi
+
+    this.api.forEachDetailGridInfo((i: any) => {
+      console.log(i)
+    })
+
+    this.attachUpdateEvents(this.api)
+
+    this.api.forEachDetailGridInfo((i: DetailGridInfo) => {
+      //console.log(i)
+      if (i.api !== undefined) {
+        this.attachUpdateEvents(i.api)
       }
-    }
-    this.loadColumnsState()
+    })
 
-
-    return (
-      <div
-          className={"ag-theme-" + this.props.args.theme}
-          style={this.defineContainerHeight()}
-      >
-        <this.ManualUpdateButton
-            manual_update={this.manualUpdateRequested}
-            onClick={(e: any) => this.returnGridValue(e)}
-        />
-        <AgGridReact
-            onGridReady={(e) => this.onGridReady(e)}
-            gridOptions={this.gridOptions}
-        ></AgGridReact>
-        <this.ClearRowSelectionButton
-            clear_row_selection={this.clearSelectedRowsButton}
-            onClick={(e: any) => this.api.deselectAll()}
-        />
-      </div>
+    this.api.addEventListener("firstDataRendered", (e: any) =>
+        this.fitColumns()
     )
+
+    this.api.setRowData(this.state.rowData)
+
+    for (var idx in this.gridOptions["preSelectedRows"]) {
+      this.api.selectIndex(this.gridOptions["preSelectedRows"][idx], true, true)
+    }
+    if (this.isGridAutoHeightOn) {
+      const renderedGridHeight = this.gridContainerRef.current?.clientHeight
+      Streamlit.setFrameHeight(renderedGridHeight)
+    }
+    if (this.wsUrl !== null) {
+      // console.log(this.state.rowData)
+      this.wsUpdate(this.api)
+    }
+
   }
 
   private defineContainerHeight() {
-    if ("domLayout" in this.gridOptions) {
-      if (this.gridOptions["domLayout"] === "autoHeight") {
-        return {
-          width: this.props.width,
-        }
+    if (this.isGridAutoHeightOn) {
+      return {
+        width: this.props.width,
       }
-    }
-    return {
-      width: this.props.width,
-      height: this.state.gridHeight,
+    } else {
+      return {
+        width: this.props.width,
+        height: this.state.gridHeight,
+      }
     }
   }
 

@@ -316,6 +316,9 @@ def AgGrid(
     response = AgGridReturn()
     response.data = data
 
+    if height is None:
+        gridOptions['domLayout'] = 'autoHeight'
+
     try:
         component_value = _component_func(
             gridOptions=gridOptions,
