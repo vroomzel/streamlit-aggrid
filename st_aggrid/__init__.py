@@ -164,6 +164,7 @@ def AgGrid(
         update_on=[],
         websocket_connection_string: str = None,
         row_id_col: str = None,
+        add_clear_selected_rows_button: bool = False,
         **default_column_parameters) -> typing.Dict:
     """Reders a DataFrame using AgGrid.
 
@@ -335,6 +336,7 @@ def AgGrid(
             update_on=update_on,
             manual_update=1 if (update_mode == GridUpdateMode.MANUAL) or (
                     update_on and update_on[0] == GridUpdateMode.MANUAL) else 0,
+            clear_selected_rows_button=add_clear_selected_rows_button,
             key=key,
             websocket_connection_string=websocket_connection_string,
             row_id_col=row_id_col
