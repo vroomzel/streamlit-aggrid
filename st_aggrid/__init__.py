@@ -11,7 +11,7 @@ import streamlit.components.v1 as components
 from decouple import config
 
 from st_aggrid.grid_options_builder import GridOptionsBuilder
-from st_aggrid.shared import GridUpdateMode, DataReturnMode, JsCode, walk_gridOptions
+from st_aggrid.shared import GridUpdateMode, DataReturnMode, JsCode, walk_gridOptions, ColumnsAutoSizeMode
 
 __AVAILABLE_THEMES = ['streamlit', 'light', 'dark', 'blue', 'fresh', 'material']
 
@@ -148,8 +148,9 @@ def AgGrid(
         height: int = 400,
         width=None,
         fit_columns_on_grid_load: bool = False,
-        update_mode: GridUpdateMode = 'model_changed',
-        data_return_mode: DataReturnMode = 'as_input',
+        columns_auto_size_mode: ColumnsAutoSizeMode = ColumnsAutoSizeMode.NO_AUTOSIZE,
+        update_mode: GridUpdateMode = GridUpdateMode.MODEL_CHANGED,
+        data_return_mode: DataReturnMode = DataReturnMode.AS_INPUT,
         allow_unsafe_jscode: bool = False,
         enable_enterprise_modules: bool = False,
         license_key: str = None,
@@ -164,6 +165,7 @@ def AgGrid(
         update_on=[],
         websocket_connection_string: str = None,
         row_id_col: str = None,
+        add_clear_selected_rows_button: bool = False,
         **default_column_parameters) -> typing.Dict:
     """Reders a DataFrame using AgGrid.
 
@@ -183,7 +185,16 @@ def AgGrid(
         Deprecated, by default None
     
     fit_columns_on_grid_load : bool, optional
+        Deprecated, use columns_auto_size_mode
         Will adjust columns to fit grid width on grid load, by default False
+
+    columns_auto_size_mode: ColumnsAutoSizeMode, optional
+        Sets columns auto size behavior on grid load event.
+        More info: https://www.ag-grid.com/react-data-grid/column-sizing/#auto-size-columns
+            ColumnsAutoSizeMode.NO_AUTOSIZE             -> No column resizing. Width defined at gridOptins is used.
+            ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW -> Make the currently visible columns fit the screen. The columns will scale (growing or shrinking) to fit the available width.
+            ColumnsAutoSizeMode.FIT_CONTENTS    -> Grid will work out the best width to fit the contents of the cells in the column.
+
     
     update_mode : GridUpdateMode, optional
         UPDATE_MODE IS DEPRECATED. USE update_on instead.
@@ -277,6 +288,10 @@ def AgGrid(
     if width:
         warnings.warn(DeprecationWarning("Width parameter is deprecated and will be removed on next version."))
 
+    if fit_columns_on_grid_load:
+        warnings.warn(DeprecationWarning("fit_columns_on_grid_load is deprecated and will be removed on next version."))
+        columns_auto_size_mode = ColumnsAutoSizeMode.FIT_ALL_COLUMNS_TO_VIEW
+
     if (not isinstance(theme, str)) or (not theme in __AVAILABLE_THEMES):
         raise ValueError(f"{theme} is not valid. Available options: {__AVAILABLE_THEMES}")
     
@@ -315,13 +330,16 @@ def AgGrid(
     response = AgGridReturn()
     response.data = data
 
+    if height is None:
+        gridOptions['domLayout'] = 'autoHeight'
+
     try:
         component_value = _component_func(
             gridOptions=gridOptions,
             row_data=row_data,
             height=height,
             width=width,
-            fit_columns_on_grid_load=fit_columns_on_grid_load,
+            columns_auto_size_mode=columns_auto_size_mode,
             data_return_mode=data_return_mode,
             frame_dtypes=frame_dtypes,
             allow_unsafe_jscode=allow_unsafe_jscode,
@@ -335,6 +353,7 @@ def AgGrid(
             update_on=update_on,
             manual_update=1 if (update_mode == GridUpdateMode.MANUAL) or (
                     update_on and update_on[0] == GridUpdateMode.MANUAL) else 0,
+            clear_selected_rows_button=add_clear_selected_rows_button,
             key=key,
             websocket_connection_string=websocket_connection_string,
             row_id_col=row_id_col
