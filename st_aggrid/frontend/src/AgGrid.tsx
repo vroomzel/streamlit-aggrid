@@ -47,6 +47,7 @@ interface State {
   rowData: any
   gridHeight: number
   should_update: boolean
+  should_deselect_all_rows: boolean
 }
 
 type CSSDict = { [key: string]: { [key: string]: string } }
@@ -241,6 +242,7 @@ class AgGrid extends StreamlitComponentBase<State> {
       rowData: JSON.parse(props.args.row_data),
       gridHeight: this.props.args.height,
       should_update: false,
+      should_deselect_all_rows: props.args.clear_currently_selected_rows,
     }
 
     this.initialiseValuesRequiredForConditionalFormatting(this.props.args.gridOptions, this.state.rowData)
@@ -386,10 +388,12 @@ class AgGrid extends StreamlitComponentBase<State> {
         rowData: new_row_data,
         gridHeight: props.args.height,
         should_update: true,
+        should_deselect_all_rows: props.args.clear_currently_selected_rows,
       }
     } else {
       return {
         gridHeight: props.args.height,
+        should_deselect_all_rows: props.args.clear_currently_selected_rows,
       }
     }
   }
@@ -441,6 +445,9 @@ class AgGrid extends StreamlitComponentBase<State> {
 
   public render = (): ReactNode => {
     if (this.api !== undefined) {
+      if (this.state.should_deselect_all_rows) {
+        this.api.deselectAll()
+      }
       if (this.state.should_update) {
         this.api.setRowData(this.state.rowData)
       }
