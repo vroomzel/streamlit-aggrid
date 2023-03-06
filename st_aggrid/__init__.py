@@ -166,6 +166,7 @@ def AgGrid(
         websocket_connection_string: str = None,
         row_id_col: str = None,
         add_clear_selected_rows_button: bool = False,
+        clear_currently_selected_rows: bool = False,
         **default_column_parameters) -> typing.Dict:
     """Reders a DataFrame using AgGrid.
 
@@ -294,16 +295,16 @@ def AgGrid(
 
     if (not isinstance(theme, str)) or (not theme in __AVAILABLE_THEMES):
         raise ValueError(f"{theme} is not valid. Available options: {__AVAILABLE_THEMES}")
-    
-    if (not isinstance(data_return_mode, (str, DataReturnMode))):
+
+    if not isinstance(data_return_mode, (str, DataReturnMode)):
         raise ValueError(f"DataReturnMode should be either a DataReturnMode enum value or a string.")
     elif isinstance(data_return_mode, str):
         try:
             data_return_mode = DataReturnMode[data_return_mode.upper()]
         except:
             raise ValueError(f"{data_return_mode} is not valid.")
-    
-    if (not isinstance(update_mode, (str, GridUpdateMode))):
+
+    if not isinstance(update_mode, (str, GridUpdateMode)):
         raise ValueError(f"GridUpdateMode should be either a valid GridUpdateMode enum value or string")
     elif isinstance(update_mode, str):
         try:
@@ -356,7 +357,8 @@ def AgGrid(
             clear_selected_rows_button=add_clear_selected_rows_button,
             key=key,
             websocket_connection_string=websocket_connection_string,
-            row_id_col=row_id_col
+            row_id_col=row_id_col,
+            clear_currently_selected_rows=clear_currently_selected_rows
         )
 
     except components.components.MarshallComponentException as ex:
