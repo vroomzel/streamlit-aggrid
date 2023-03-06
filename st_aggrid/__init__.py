@@ -105,7 +105,7 @@ if not _RELEASE:
     warnings.warn("WARNING: ST_AGGRID is in development mode.")
     _component_func = components.declare_component(
         "agGrid",
-        url="localhost:3001",
+        url="http://localhost:3001",
     )
 else:
     parent_dir = Path(os.path.dirname(__file__))
